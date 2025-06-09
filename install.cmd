@@ -10,8 +10,9 @@ if %errorlevel% neq 0 (
 )
 
 :: Some shit
-set tmpDir=%temp%\Installer
+set "tmpDir=%temp%\Installer"
 set "download=bitsadmin /transfer DownloadFile /download /priority foreground"
+set "pythonLibs=psutil requests"
 
 :: Create temp dir
 if not exist "%tmpDir%" (
@@ -26,9 +27,9 @@ set "winRarTmp=%tmpDir%\winrar.exe"
 "%winRarTmp%" /S
 
 :: Activate WinRar
-set "licensePath=%AppData%\WinRAR"
+set "licensePath=%ProgramFiles%\WinRAR"
 mkdir "%licensePath%" >nul 2>&1
->%licensePath%\rarreg.key (
+>"%licensePath%\rarreg.key" (
 	echo RAR registration data
 	echo Hardik
 	echo www.Hardik.live
@@ -42,3 +43,47 @@ mkdir "%licensePath%" >nul 2>&1
 	echo 6b5e5eaa169647277b533e8c4ac01535547d1dee14411061928023
 )
 
+
+:: Install Python
+title Installing Python
+set "pythonDir=%ProgramFiles%\Python"
+set "pythonBin=%pythonDir%\python.exe"
+set "pythonUrl=https://www.python.org/ftp/python/3.13.4/python-3.13.4-amd64.exe"
+set "pythonTmp=%tmpDir%\python.exe"
+%download% "%pythonUrl%" "%pythonTmp%"
+"%pythonTmp%" /quiet InstallAllUsers=1 PrependPath=1 Include_test=0 TargetDir="%pythonDir%"
+"%pythonBin%" -m pip install %pythonLibs%
+
+:: Install Sublime text
+title Installing Sublime Text
+set "sublimeTextUrl=https://download.sublimetext.com/sublime_text_build_4200_x64_setup.exe"
+set "sublimeTextTmp=%tmpDir%\sublime_text.exe"
+%download% "%sublimeTextUrl%" "%sublimeTextTmp%"
+"%sublimeTextTmp%" /VERYSILENT /NORESTART
+
+:: Activate sublime text
+set "sublimeTextPatchUrl=https://raw.githubusercontent.com/N1xUser/SublimeText-Patch/refs/heads/main/SublimeTextPatch.py"
+set "sublimeTextPatchTmp=%tmpDir%\SublimeTextPatch.py"
+%download% "%sublimeTextPatchUrl%" "%sublimeTextPatchTmp%"
+(
+echo 1
+echo yes
+echo no
+) | "%pythonBin%" "%sublimeTextPatchTmp%"
+
+:: Install Firefox
+title Installing Firefox
+set "firefoxUrl=https://download.mozilla.org/?product=firefox-latest-ssl&os=win64&lang=en-US"
+set "firefoxTmp=%tmpDir%\firefox.exe"
+%download% "%firefoxUrl%" "%firefoxTmp%"
+"%firefoxTmp%" -ms
+
+:: Install VLC
+title Installing VLC
+set "vlcUrl=https://videolan.ip-connect.info/vlc/3.0.20/win64/vlc-3.0.20-win64.msi"
+set "vlcTmp=%tmpDir%\vlc.msi"
+%download% "%vlcUrl%" "%vlcTmp%"
+msiexec /i "%vlcTmp%" /quiet /norestart
+
+title Done
+pause
